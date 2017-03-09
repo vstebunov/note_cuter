@@ -4,6 +4,7 @@ PImage src;
 
 String imageFilename;
 int imageWidth, imageHeight;
+String deckName;
 
 class Rectangle {
   int x, y, w, h;
@@ -19,19 +20,16 @@ class Rectangle {
 void settings() {
   imageFilename = "johny.jpg";
   imageWidth = 783;
+  imageHeight = 449;
+  deckName = "johny";
   
-  size(imageWidth, 449);
+  size(imageWidth, imageHeight);
 }
 
 
-void setup() {
-  
-  
+void setup() {    
   src = loadImage(imageFilename); 
-  
-  
-  String deckName = "johny"; 
-    
+         
   noFill();
   stroke(color(0,255,0));
   
@@ -107,8 +105,5 @@ void saveRectangle(
     rectangle.set(xPos, yPos, tab);
     xPos = xPos + r.w;    
   }
-  
   rectangle.save(deckName+index+".jpg");
-  
-  //image(rectangle, 0, 0);
 }

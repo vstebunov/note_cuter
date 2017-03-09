@@ -43,7 +43,7 @@ tabRectangle
 
 ## Пример работы
 
-[Программа](\screenshot\work_screen.png)
+![Программа](\screenshot\work_screen.png)
 
 
-[Результат](\screenshot\johny1.jpg)
+![Результат](\screenshot\johny1.jpg)
