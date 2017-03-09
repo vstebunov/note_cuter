@@ -43,7 +43,7 @@ tabRectangle
 
 ## Пример работы
 
-![Программа](\screenshot\work_screen.png)
+![Программа](https://raw.githubusercontent.com/vstebunov/note_cuter/master/screenshot/work_screen.png)
 
 
-![Результат](\screenshot\johny1.jpg)
+![Результат](https://raw.githubusercontent.com/vstebunov/note_cuter/master/screenshot/johny1.jpg)
