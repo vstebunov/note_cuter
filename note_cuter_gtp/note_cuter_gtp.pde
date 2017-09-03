@@ -9,6 +9,8 @@ Rectangle captured;
 int offsetX;
 int offsetY;
 
+int offsetResult;
+
 Rectangle resized;
 
 String imageFilename;
@@ -51,43 +53,59 @@ void settings() {
 }
 
 void draw() {
- 
-  noFill();
-  clear();
-    
-  if (src == null) { return; }
-  image(src,0,0);
+	noFill();
+	clear();
 
-  if (globalTabLock) { return; }
-  
-  if (keyRectangle == null) { return; }
-  stroke(color(255,0,0));
-  rect(keyRectangle.x, keyRectangle.y, keyRectangle.w, keyRectangle.h);
-  
-  if (tabRectangle == null || tabRectangle.size() == 0) { return; }  
-  
-  for (Rectangle r: tabRectangle) {   
-    if (r == captured) {
-      stroke(color(0,30,0));
-    } else {
-      stroke(color(0,255,0));
-    }
-    if (mouseNear(r)) {
-      stroke(color(0,0,200));
-    }
-    rect(r.x, r.y, r.w, r.h);
-  }
-    
-  if (outputs == null) {return; }
-  int outputHeight = 0;
-  try {
-  for (PImage output: outputs) {
-    image(output, src.width + 10, 0 + outputHeight);
-    outputHeight += output.height + 10;
-  }
-  } catch (Exception e) {
-    println(e);
-  }
+	if (src == null) { return; }
+	image(src,0,0);
+
+	if (globalTabLock) { return; }
+
+	if (keyRectangle == null) { return; }
+	stroke(color(255,0,0));
+	rect(keyRectangle.x, keyRectangle.y, keyRectangle.w, keyRectangle.h);
+
+	if (tabRectangle == null || tabRectangle.size() == 0) { return; }  
+
+	for (Rectangle r: tabRectangle) {   
+		if (r == captured) {
+			stroke(color(0,30,0));
+		} else {
+			stroke(color(0,255,0));
+		}
+		if (mouseNear(r)) {
+			stroke(color(0,0,200));
+		}
+		rect(r.x, r.y, r.w, r.h);
+	}
+
+	if (outputs == null) {return; }
+
+	if (mouseInScrollDownBorder()) {
+		offsetResult -= 10;
+	}
+
+	if (mouseInScrollUpBorder()) {
+		offsetResult += 10;
+	}
+
+	int outputHeight = offsetResult;
+	try {
+		for (PImage output: outputs) {
+			image(output, src.width + 10, 0 + outputHeight);
+			outputHeight += output.height + 10;
+		}
+	} catch (Exception e) {
+		println(e);
+	}
+}
+
+boolean mouseInScrollUpBorder() {
+  return mouseY < 120 && mouseX > src.width;
+}
+
+boolean mouseInScrollDownBorder() {
+  return mouseY >= height - 120 && mouseX > src.width;
 }
 
 boolean mouseInside(Rectangle r) {
@@ -113,6 +131,12 @@ void capture() {
        resized = r;
        break;
     }
+  }
+
+  if (mouseInside(keyRectangle)) {
+	  captured = keyRectangle;
+	  offsetX = mouseX - keyRectangle.x;
+	  offsetY = mouseY - keyRectangle.y;	  
   }
 }
 
@@ -170,48 +194,50 @@ void process(File selection) {
 };
 
 void calculate() {
- 
   outputs = new ArrayList<PImage>();
   for (int i = 0; i < tabRectangle.size() - 2; i = i + 1) {  
     saveRectangle(deckName, i, keyRectangle, tabRectangle.subList(0 + i,3 + i));
   }
-  
   saveState(deckName, keyRectangle, tabRectangle);
 }
 
 void loadState(String deckName) {
-  BufferedReader reader = createReader(deckName + ".txt");
-  String line;
-  globalTabLock = true;
-  try {
-    line = reader.readLine();    
-    keyRectangle = new Rectangle(line);
-    
-    line = reader.readLine();
-    while (line != null) {
-      tabRectangle.add(new Rectangle(line));
-      line = reader.readLine();
-    } 
-    reader.close();
-  } catch (IOException e) {
-    e.printStackTrace();
-    setDefault();
-  }
-  globalTabLock = false;
+	BufferedReader reader = createReader(deckName + ".txt");
+	String line;
+	globalTabLock = true;
+	try {
+		line = reader.readLine();    
+		keyRectangle = new Rectangle(line);
+
+		line = reader.readLine();
+		while (line != null) {
+			tabRectangle.add(new Rectangle(line));
+			line = reader.readLine();
+		} 
+		reader.close();
+	} catch (IOException e) {
+		e.printStackTrace();
+		setDefault();
+	}
+	globalTabLock = false;
 }
 
 void setDefault() {
   keyRectangle = new Rectangle(30,6,51,75);
 }
 
-void saveState(String deckName, Rectangle key, ArrayList<Rectangle> tab) {
-  PrintWriter output = createWriter(deckName + ".txt");  
-  output.println(key.toCSVLine());  
-  for (Rectangle t: tab) {
-    output.println(t.toCSVLine());
-  }  
-  output.flush();
-  output.close();
+void saveState(
+	String deckName, 
+	Rectangle key, 
+	ArrayList<Rectangle> tab
+) {
+	PrintWriter output = createWriter(deckName + ".txt");  
+	output.println(key.toCSVLine());  
+	for (Rectangle t: tab) {
+		output.println(t.toCSVLine());
+	}  
+	output.flush();
+	output.close();
 }
 
 void saveRectangle(
@@ -219,50 +245,50 @@ void saveRectangle(
     int index,
     Rectangle keyRectangle,
     List<Rectangle> tabRectangle
-  ) {
-  
-  if (keyRectangle == null) {
-    println("keyRectangle are empty or null");
-    return;
-  }
-  
-  if (tabRectangle == null || tabRectangle.size() == 0) {
-    println("tabRectangle are empty or null!");
-    return;
-  }
-   
-  PImage key = createImage(keyRectangle.w, keyRectangle.h, RGB);
-    
-  key = src.get(keyRectangle.x,keyRectangle.y,keyRectangle.w,keyRectangle.h);
-  
-  
-  int tabRectangleWidth = 0;
-  for (Rectangle r: tabRectangle) {
-    tabRectangleWidth = r.w + tabRectangleWidth;
-  }
-  
-  int tabRectangleHeight = tabRectangle.get(0).h; 
-  
-  
-  Rectangle finalRectangle = new Rectangle(
-    0,
-    0,
-    keyRectangle.w + tabRectangleWidth,
-    tabRectangleHeight);
-      
-  PImage rectangle = createImage(finalRectangle.w, finalRectangle.h, RGB);
-    
-  rectangle.set(0,0,key);
-  
-  int xPos = keyRectangle.w;
-  int yPos = 0;
-  for (Rectangle r: tabRectangle) {
-    PImage tab = createImage(r.w, r.h, RGB);
-    tab = src.get(r.x, r.y, r.w, r.h);    
-    rectangle.set(xPos, yPos, tab);
-    xPos = xPos + r.w;    
-  }
-  rectangle.save(deckName+index+".jpg");
-  
-  outputs.add(rectangle);
+) {
+
+	if (keyRectangle == null) {
+		println("keyRectangle are empty or null");
+		return;
+	}
+
+	if (tabRectangle == null || tabRectangle.size() == 0) {
+		println("tabRectangle are empty or null!");
+		return;
+	}
+
+	PImage key = createImage(keyRectangle.w, keyRectangle.h, RGB);
+
+	key = src.get(keyRectangle.x,keyRectangle.y,keyRectangle.w,keyRectangle.h);
+
+
+	int tabRectangleWidth = 0;
+	for (Rectangle r: tabRectangle) {
+		tabRectangleWidth = r.w + tabRectangleWidth;
+	}
+
+	int tabRectangleHeight = tabRectangle.get(0).h; 
+
+
+	Rectangle finalRectangle = new Rectangle(
+			0,
+			0,
+			keyRectangle.w + tabRectangleWidth,
+			tabRectangleHeight);
+
+	PImage rectangle = createImage(finalRectangle.w, finalRectangle.h, RGB);
+
+	rectangle.set(0,0,key);
+
+	int xPos = keyRectangle.w;
+	int yPos = 0;
+	for (Rectangle r: tabRectangle) {
+		PImage tab = createImage(r.w, r.h, RGB);
+		tab = src.get(r.x, r.y, r.w, r.h);    
+		rectangle.set(xPos, yPos, tab);
+		xPos = xPos + r.w;    
+	}
+	rectangle.save(deckName+index+".jpg");
+
+	outputs.add(rectangle);
 }
