@@ -61,11 +61,16 @@ void draw() {
 
 	if (globalTabLock) { return; }
 
-	if (keyRectangle == null) { return; }
-	stroke(color(255,0,0));
+	if (keyRectangle == null) { return; } //<>//
+
+  if (mouseNear(keyRectangle)) {
+    stroke(color(0,30,0));
+  } else {
+	  stroke(color(255,0,0));
+  }
 	rect(keyRectangle.x, keyRectangle.y, keyRectangle.w, keyRectangle.h);
 
-	if (tabRectangle == null || tabRectangle.size() == 0) { return; }  
+	if (tabRectangle == null/* || tabRectangle.size() == 0*/) { return; }  
 
 	for (Rectangle r: tabRectangle) {   
 		if (r == captured) {
@@ -120,7 +125,7 @@ boolean mouseNear(Rectangle r) {
           ((r.x == mouseX || r.x + r.w == mouseX) && r.y <= mouseY && r.y + r.h >= mouseY);
 }
 
-void capture() {
+void capture() { 
   for (Rectangle r: tabRectangle) {
     if (mouseInside(r)) {
        captured = r; 
@@ -137,6 +142,8 @@ void capture() {
 	  captured = keyRectangle;
 	  offsetX = mouseX - keyRectangle.x;
 	  offsetY = mouseY - keyRectangle.y;	  
+  } else if (mouseNear(keyRectangle)) {
+    resized = keyRectangle;
   }
 }
 
@@ -157,7 +164,11 @@ void dragCapture() {
 
 void dragResize() {
   resized.w = mouseX - resized.x;
-  resized.h = keyRectangle.h;
+  if (resized != keyRectangle ) {
+    resized.h = keyRectangle.h;
+  } else {
+    resized.h = mouseY - resized.y;
+  }
 }
 
 void mousePressed(MouseEvent evt) {
@@ -179,6 +190,10 @@ void mouseDragged() {
 }
 
 void doubleClicked() {
+  if (tabRectangle.size() == 0) {
+    tabRectangle.add(new Rectangle(mouseX, mouseY, 20, 20));
+    return;
+  }
   Rectangle last = tabRectangle.get(tabRectangle.size() -1);  
   tabRectangle.add(new Rectangle(mouseX - last.w / 2, mouseY - last.h / 2, last.w, last.h));
 }
@@ -202,7 +217,22 @@ void calculate() {
 }
 
 void loadState(String deckName) {
-	BufferedReader reader = createReader(deckName + ".txt");
+  String filename = deckName + ".txt";
+  File f = new File(sketchPath(filename));
+  if (!f.exists()) {
+    globalTabLock = false;
+    setDefault();
+    return;
+  }
+  
+  BufferedReader reader;
+  try {
+	 reader = createReader(filename);
+  } catch(Exception e) {
+    e.printStackTrace();
+    setDefault();    
+    return;
+  }
 	String line;
 	globalTabLock = true;
 	try {
@@ -223,7 +253,7 @@ void loadState(String deckName) {
 }
 
 void setDefault() {
-  keyRectangle = new Rectangle(30,6,51,75);
+  keyRectangle = new Rectangle(30,6,51,75);  
 }
 
 void saveState(
